@@ -176,12 +176,16 @@ function main(){
     else
       menuLinkExport $1 $3 $4
     fi
+  fi
 }
 
 
 ##                                            ##
 # Main Function Call - Script's starting point #
 ##                                            ##
+
+host=`hostname`
+printf "\nWelcome ${bold}${green}$host${reset}\n"
 
 printf "\nPlease use the ${bold}--help${reset} as first argument if you are not sure how to use this script\n"
 
