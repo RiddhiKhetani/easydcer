@@ -31,6 +31,24 @@ function startScript(){
   printf "\n\n----- Exporting the content you need -----\n\n"
 }
 
+function createFolders(){
+  if [ ! -d $_baseFolder_/$1/copy_this ]; then
+    (cd $_baseFolder_/$1/ ; `mkdir copy_this`)
+  fi
+  if [ ! -d $_baseFolder_/$1/copy_this/block_content ]; then
+    (cd $_baseFolder_/$1/copy_this ; `mkdir block_content`)
+  fi
+  if [ ! -d $_baseFolder_/$1/copy_this/node ]; then
+    (cd $_baseFolder_/$1/copy_this ; `mkdir node`)
+  fi
+  if [ ! -d $_baseFolder_/$1/copy_this/file ]; then
+    (cd $_baseFolder_/$1/copy_this ; `mkdir file`)
+  fi
+  if [ ! -d $_baseFolder_/$1/copy_this/menu_link_content ]; then
+    (cd $_baseFolder_/$1/copy_this ; `mkdir menu_link_content`)
+  fi
+}
+
 # Adds EOF to all the files existing in the given directory
 function addEOF(){
   for file in $1/*
@@ -47,21 +65,26 @@ function nodeExport(){
     printf "${bold}${green}${blackbackground}Default Content for node $2 backed up successfully to ${enable_underline}$_baseFolder_/$3/node_backup/$2${disable_underline}${reset} \n\n"
     if [ -d $_baseFolder_/$3/node_backup/$2/node ]; then
       addEOF $_baseFolder_/$3/node_backup/$2/node
-      `cp $_baseFolder_/$3/node_backup/$2/node/ $_baseFolder_/$3/copy_this/node/`
+      createFolders $3
+      `cp -r $_baseFolder_/$3/node_backup/$2/node/* $_baseFolder_/$3/copy_this/node/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the node JSON files generated in node backups${reset} \n\n"
     fi
     if [ -d $_baseFolder_/$3/node_backup/$2/block_content ]; then
       printf "${green}Reference Blocks found in this Node${reset} \n"
       addEOF $_baseFolder_/$3/node_backup/$2/block_content
+      createFolders $3
+      `cp -r $_baseFolder_/$3/node_backup/$2/block_content/* $_baseFolder_/$3/copy_this/block_content/`
       printf "\n${bold}${green}${blackbackground}EOF added successfully for all the block_content JSON files generated in node backups${reset} \n\n"
     fi
     if [ -d $_baseFolder_/$3/node_backup/$2/file ]; then
       addEOF $_baseFolder_/$3/node_backup/$2/file
+      createFolders $3
+      `cp -r $_baseFolder_/$3/node_backup/$2/file/* $_baseFolder_/$3/copy_this/file/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the File JSON files generated in node backups${reset} \n\n"
     fi
   else
     printf "\n${bold}${white}${redbackground}Please check if a Node with ID $2 exists${reset}\n\n"
-    exit 0
+    continue 2>/dev/null
   fi
 }
 
@@ -73,16 +96,19 @@ function blockExport(){
     printf "${bold}${green}${blackbackground}Default Content for Block $2 backed up successfully to ${enable_underline}$_baseFolder_/$3/block_backup/$2${disable_underline}${reset} \n\n"
     if [ -d $_baseFolder_/$3/block_backup/$2/block_content ]; then
       addEOF $_baseFolder_/$3/block_backup/$2/block_content
-      `cp $_baseFolder_/$3/block_backup/$2/block_content/ $_baseFolder_/$3/copy_this/block_content/`
+      createFolders $3
+      `cp -r $_baseFolder_/$3/block_backup/$2/block_content/* $_baseFolder_/$3/copy_this/block_content/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the Block JSON files generated in block_content backups${reset} \n\n"
     fi
     if [ -d $_baseFolder_/$3/block_backup/$2/file ]; then
       addEOF $_baseFolder_/$3/block_backup/$2/file
+      createFolders $3
+      `cp -r $_baseFolder_/$3/block_backup/$2/file/* $_baseFolder_/$3/copy_this/file/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the File JSON files generated in block_content backups${reset} \n\n"
     fi
   else
     printf "\n${bold}${white}${redbackground}Please check if a Block with ID $2 exists${reset}\n\n"
-    exit 0
+    continue 2>/dev/null
   fi
 }
 
@@ -94,12 +120,13 @@ function menuLinkExport(){
     printf "${bold}${green}${blackbackground}Default Content for Menu $2 backed up successfully to ${enable_underline}$_baseFolder_/$3/menu_backup/$2${disable_underline}${reset} \n\n"
     if [ -d $_baseFolder_/$3/menu_backup/$2/menu_link_content ]; then
       addEOF $_baseFolder_/$3/menu_backup/$2/menu_link_content
-      `cp $_baseFolder_/$3/menu_backup/$2/menu_link_content/ $_baseFolder_/$3/copy_this/menu_link_content/`
+      createFolders $3
+      `cp -r $_baseFolder_/$3/menu_backup/$2/menu_link_content/* $_baseFolder_/$3/copy_this/menu_link_content/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the Menu JSON files generated in menu_link_content backups${reset} \n\n"
     fi
   else
     printf "\n${bold}${white}${redbackground}Please check if a Menu with ID $2 exists${reset}\n\n"
-    exit 0
+    continue 2>/dev/null
   fi
 }
 
