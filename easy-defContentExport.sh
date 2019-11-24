@@ -225,10 +225,12 @@ else
   printf "\nPlease enter the ID's of all the $entity_type you want to export (separate each ID with a comma). ${bold}${red}[Input Example : 21,34,45,69]${reset} : "
   read input_3
 
-  idArray=(${input_3//,/ })
+  if [ -d $_baseFolder_/copy_from_this ]; then
+    `rm -r $_baseFolder_/copy_from_this`
+  fi
 
   start_time=$(date +%s)
-
+  idArray=(${input_3//,/ })
   for id in "${idArray[@]}"; do
     main $export_mode $entity_type $id $subscription
   done
