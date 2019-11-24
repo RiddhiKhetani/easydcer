@@ -11,7 +11,6 @@
 ##############################################################################################################################################################
 
 
-
 # Variables
 today_date=`date '+%b-%d'`
 _baseFolder_=~/Desktop/defaultContent/$today_date
@@ -25,6 +24,7 @@ enable_underline=`tput smul`
 disable_underline=`tput rmul`
 bold=`tput bold`
 reset=`tput sgr0`
+flag=FALSE
 
 # Start Message
 function startScript(){
@@ -32,20 +32,20 @@ function startScript(){
 }
 
 function createFolders(){
-  if [ ! -d $_baseFolder_/$1/copy_this ]; then
-    (cd $_baseFolder_/$1/ ; `mkdir copy_this`)
+  if [ ! -d $_baseFolder_/copy_from_this ]; then
+    (cd $_baseFolder_/ ; `mkdir copy_from_this`)
   fi
-  if [ ! -d $_baseFolder_/$1/copy_this/block_content ]; then
-    (cd $_baseFolder_/$1/copy_this ; `mkdir block_content`)
+  if [ ! -d $_baseFolder_/copy_from_this/block_content ]; then
+    (cd $_baseFolder_/copy_from_this ; `mkdir block_content`)
   fi
-  if [ ! -d $_baseFolder_/$1/copy_this/node ]; then
-    (cd $_baseFolder_/$1/copy_this ; `mkdir node`)
+  if [ ! -d $_baseFolder_/copy_from_this/node ]; then
+    (cd $_baseFolder_/copy_from_this ; `mkdir node`)
   fi
-  if [ ! -d $_baseFolder_/$1/copy_this/file ]; then
-    (cd $_baseFolder_/$1/copy_this ; `mkdir file`)
+  if [ ! -d $_baseFolder_/copy_from_this/file ]; then
+    (cd $_baseFolder_/copy_from_this ; `mkdir file`)
   fi
-  if [ ! -d $_baseFolder_/$1/copy_this/menu_link_content ]; then
-    (cd $_baseFolder_/$1/copy_this ; `mkdir menu_link_content`)
+  if [ ! -d $_baseFolder_/copy_from_this/menu_link_content ]; then
+    (cd $_baseFolder_/copy_from_this ; `mkdir menu_link_content`)
   fi
 }
 
@@ -66,22 +66,23 @@ function nodeExport(){
     if [ -d $_baseFolder_/$3/node_backup/$2/node ]; then
       addEOF $_baseFolder_/$3/node_backup/$2/node
       createFolders $3
-      `cp -r $_baseFolder_/$3/node_backup/$2/node/* $_baseFolder_/$3/copy_this/node/`
+      `cp -r $_baseFolder_/$3/node_backup/$2/node/* $_baseFolder_/copy_from_this/node/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the node JSON files generated in node backups${reset} \n\n"
     fi
     if [ -d $_baseFolder_/$3/node_backup/$2/block_content ]; then
       printf "${green}Reference Blocks found in this Node${reset} \n"
       addEOF $_baseFolder_/$3/node_backup/$2/block_content
       createFolders $3
-      `cp -r $_baseFolder_/$3/node_backup/$2/block_content/* $_baseFolder_/$3/copy_this/block_content/`
+      `cp -r $_baseFolder_/$3/node_backup/$2/block_content/* $_baseFolder_/copy_from_this/block_content/`
       printf "\n${bold}${green}${blackbackground}EOF added successfully for all the block_content JSON files generated in node backups${reset} \n\n"
     fi
     if [ -d $_baseFolder_/$3/node_backup/$2/file ]; then
       addEOF $_baseFolder_/$3/node_backup/$2/file
       createFolders $3
-      `cp -r $_baseFolder_/$3/node_backup/$2/file/* $_baseFolder_/$3/copy_this/file/`
+      `cp -r $_baseFolder_/$3/node_backup/$2/file/* $_baseFolder_/copy_from_this/file/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the File JSON files generated in node backups${reset} \n\n"
     fi
+    flag=TRUE
   else
     printf "\n${bold}${white}${redbackground}Please check if a Node with ID $2 exists${reset}\n\n"
     continue 2>/dev/null
@@ -97,15 +98,16 @@ function blockExport(){
     if [ -d $_baseFolder_/$3/block_backup/$2/block_content ]; then
       addEOF $_baseFolder_/$3/block_backup/$2/block_content
       createFolders $3
-      `cp -r $_baseFolder_/$3/block_backup/$2/block_content/* $_baseFolder_/$3/copy_this/block_content/`
+      `cp -r $_baseFolder_/$3/block_backup/$2/block_content/* $_baseFolder_/copy_from_this/block_content/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the Block JSON files generated in block_content backups${reset} \n\n"
     fi
     if [ -d $_baseFolder_/$3/block_backup/$2/file ]; then
       addEOF $_baseFolder_/$3/block_backup/$2/file
       createFolders $3
-      `cp -r $_baseFolder_/$3/block_backup/$2/file/* $_baseFolder_/$3/copy_this/file/`
+      `cp -r $_baseFolder_/$3/block_backup/$2/file/* $_baseFolder_/copy_from_this/file/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the File JSON files generated in block_content backups${reset} \n\n"
     fi
+    flag=TRUE
   else
     printf "\n${bold}${white}${redbackground}Please check if a Block with ID $2 exists${reset}\n\n"
     continue 2>/dev/null
@@ -121,9 +123,10 @@ function menuLinkExport(){
     if [ -d $_baseFolder_/$3/menu_backup/$2/menu_link_content ]; then
       addEOF $_baseFolder_/$3/menu_backup/$2/menu_link_content
       createFolders $3
-      `cp -r $_baseFolder_/$3/menu_backup/$2/menu_link_content/* $_baseFolder_/$3/copy_this/menu_link_content/`
+      `cp -r $_baseFolder_/$3/menu_backup/$2/menu_link_content/* $_baseFolder_/copy_from_this/menu_link_content/`
       printf "${bold}${green}${blackbackground}EOF added successfully for all the Menu JSON files generated in menu_link_content backups${reset} \n\n"
     fi
+    flag=TRUE
   else
     printf "\n${bold}${white}${redbackground}Please check if a Menu with ID $2 exists${reset}\n\n"
     continue 2>/dev/null
@@ -134,7 +137,7 @@ function menuLinkExport(){
 function main(){
   if [ "$2" == "node" ]; then
     if [ -d $_baseFolder_/$4/node_backup/$3 ]; then
-      printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content for Node ID $3 : Do you want to overwrite it? (yes/no) :${reset} "
+      printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Node ID $3 : Do you want to overwrite it? (yes/no) :${reset} "
       read -n 1 confirmation
       if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
         printf "\n\n----- Overwriting Existing Backup for node with ID : $3 -----"
@@ -149,7 +152,7 @@ function main(){
     
   elif [ "$2" == "block" ]; then
     if [ -d $_baseFolder_/$4/block_backup/$3 ]; then
-      printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content for Block ID $3 : Do you want to overwrite it? (yes/no) :${reset} "
+      printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Block ID $3 : Do you want to overwrite it? (yes/no) :${reset} "
       read -n 1 confirmation
       if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
         printf "\n\n----- Overwriting Existing Backup for Block with ID : $3 -----"
@@ -164,7 +167,7 @@ function main(){
 
   elif [ "$2" == "menu" ]; then
     if [ -d $_baseFolder_/$4/menu_backup/$3 ]; then
-      printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content for Menu ID $3 : Do you want to overwrite it? (yes/no) :${reset} "
+      printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Menu ID $3 : Do you want to overwrite it? (yes/no) :${reset} "
       read -n 1 confirmation
       if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
         printf "\n\n----- Overwriting Existing Backup for Menu with ID : $3 -----"
@@ -180,25 +183,25 @@ function main(){
 }
 
 
-##                                            ##
-# Main Function Call - Script's starting point #
-##                                            ##
+##################################################
+## Main Function Call - Script's starting point ##
+##################################################
 
 host=`hostname`
 printf "\nWelcome ${bold}${green}$host${reset}\n"
-
-printf "\nPlease use the ${bold}--help${reset} as first argument if you are not sure how to use this script\n"
 
 printf "\nPlease enter the ${bold}${red}subscription name${reset} for which you are tying to export the default content for : "
 read subscription
 
 if [ ! -d /var/www/$subscription ]; then
-  printf "\n${bold}${red}${whitebackground}Cannot find a local setup with name $subscription Please make sure you have this project in your local${reset}\n\n"
+  printf "\n${bold}${red}${whitebackground}Cannot find a local setup with name ${enable_underline}$subscription${disable_underline}, Please make sure you have this project in your local${reset}\n\n"
 else
-  printf "\nWhich export do you want to use? \nAvailable Options : ${bold}${red}[ 1. DCE ] [ 2. DCER ]${reset} : "
+  printf "\nWhich export do you want to use? \nAvailable Options : ${bold}${red}[ 1. DCE (NOT WORKING AS OF NOW, Please refrain from selecting this) ] [ 2. DCER ]${reset} : "
   read input_1
   if [ $input_1 == 1 ]; then
-    export_mode=dce
+    printf "\n${bold}${red}${whitebackground}DCE export mode is not working as of now, This will be fixed or removed in future${reset}\n\n"
+    exit 0
+    #export_mode=dce
   elif [ $input_1 == 2 ]; then
     export_mode=dcer
   else 
@@ -224,7 +227,21 @@ else
 
   idArray=(${input_3//,/ })
 
+  start_time=$(date +%s)
+
   for id in "${idArray[@]}"; do
     main $export_mode $entity_type $id $subscription
   done
+
+  if [ $flag ]; then
+    end_time=$(date +%s)
+    execution_time=$(expr $end_time - $start_time)
+
+    printf "\n\n\n${bold}${green}Successfully backedup the default content you need in ${enable_underline} $execution_time ${disable_underline} seconds${reset}\n"
+    printf "\n${bold}${green}All your individual backups can be found ${enable_underline}$_baseFolder_/$subscription${disable_underline}${reset}\n"
+    printf "\n${bold}${green}You can find your final files in ${enable_underline}$_baseFolder_/copy_from_this${disable_underline}${reset}\n"
+    printf "\n${bold}${green}All of these generated JSON files have EOF${reset}\n"
+    printf "\n${bold}${green}You can directly copy the contents from the ${red}copy_from_this ${green}folder and paste em into your /profile/content folder in your local setup and then commit${reset}\n"
+    printf "\n\n${bold}${green}Thanks for using this script!!! Feedback is appreciated${reset}\n\n\n"
+  fi
 fi
