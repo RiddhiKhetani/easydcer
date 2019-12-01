@@ -1,4 +1,4 @@
-# easy_defContentExport
+# easydcer
 Bash Script which makes exporting Drupal default content a lot easier than manually doing it
 
 ##### Work Done
