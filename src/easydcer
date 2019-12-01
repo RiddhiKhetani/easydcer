@@ -1,0 +1,391 @@
+#! /bin/bash
+
+###################################################################################################################
+##  Tired of manually exporting Drupal's default content?                                                        ##
+##  No problem, I've written this script just to make it a bit easier and to save a bit of your time             ##
+##                                                                                                               ##
+##  On the contrary why do manual work, when UNIX can automate it for you ;)                                     ##
+##                                                                                                               ##
+##  Kindly let me know if anyone faces Issues.                                                                   ##
+##  If anyone is interested in joining hands so we can develop this a lot better, please get in touch with me :) ##
+##                                                                                                               ##
+##                                                                               By : Ruthvik Vegunta            ##
+###################################################################################################################
+
+
+##############################
+###     tput variables     ###
+##############################
+red=`tput setaf 1`
+green=`tput setaf 2`
+white=`tput setaf 7`
+yellow=`tput setaf 3`
+whitebackground=`tput setab 7`
+redbackground=`tput setab 1`
+blackbackground=`tput setab 0`
+enable_underline=`tput smul`
+disable_underline=`tput rmul`
+bold=`tput bold`
+reset=`tput sgr0`
+
+##############################
+###    global variables    ###
+##############################
+today_date=`date '+%b-%d'`
+_baseFolder_=~/Desktop/defaultContent/$today_date
+flag=false
+host=`hostname`
+
+##################################################
+###            Starting Message                ###
+##################################################
+function startScript(){
+  printf "\n\n----- Exporting the content you need -----\n\n"
+}
+
+##################################################
+###       Copy content onto Local Setup        ###
+##################################################
+function createFolders(){
+  if [ ! -d $_baseFolder_/copy_from_this ]; then
+    (cd $_baseFolder_/ ; `mkdir copy_from_this`)
+  fi
+  if [ ! -d $_baseFolder_/copy_from_this/block_content ]; then
+    (cd $_baseFolder_/copy_from_this ; `mkdir block_content`)
+  fi
+  if [ ! -d $_baseFolder_/copy_from_this/node ]; then
+    (cd $_baseFolder_/copy_from_this ; `mkdir node`)
+  fi
+  if [ ! -d $_baseFolder_/copy_from_this/file ]; then
+    (cd $_baseFolder_/copy_from_this ; `mkdir file`)
+  fi
+  if [ ! -d $_baseFolder_/copy_from_this/menu_link_content ]; then
+    (cd $_baseFolder_/copy_from_this ; `mkdir menu_link_content`)
+  fi
+}
+
+##################################################
+###     Add EOF's to all generated JSON's      ###
+##################################################
+function addEOF(){
+  for file in $1/*
+  do
+    echo "" >> "$file"
+  done
+}
+
+##################################################
+###     Node Default content Export Logic      ###
+##################################################
+function nodeExport(){
+	_subscription=$2
+	_id=$1
+  (cd /var/www/$_subscription/app/profiles/${_subscription}_profile ; `drush dcer node $_id --folder=$_baseFolder_/$_subscription/node_backup/$_id 2>/dev/null &`)
+  if [ -d $_baseFolder_/$_subscription/node_backup/$_id ]; then
+    startScript  
+    printf "${bold}${green}${blackbackground}Default Content for node $_id backed up successfully to ${enable_underline}$_baseFolder_/$_subscription/node_backup/$_id${disable_underline}${reset} \n\n"
+    if [ -d $_baseFolder_/$_subscription/node_backup/$_id/node ]; then
+      addEOF $_baseFolder_/$_subscription/node_backup/$_id/node
+      createFolders $_subscription
+      `cp -r $_baseFolder_/$_subscription/node_backup/$_id/node/* $_baseFolder_/copy_from_this/node/`
+      printf "${bold}${green}${blackbackground}EOF added successfully for all the node JSON files generated in node backups${reset} \n\n"
+    fi
+    if [ -d $_baseFolder_/$_subscription/node_backup/$_id/block_content ]; then
+      printf "${green}Reference Blocks found in this Node${reset} \n"
+      addEOF $_baseFolder_/$_subscription/node_backup/$_id/block_content
+      createFolders $_subscription
+      `cp -r $_baseFolder_/$_subscription/node_backup/$_id/block_content/* $_baseFolder_/copy_from_this/block_content/`
+      printf "\n${bold}${green}${blackbackground}EOF added successfully for all the block_content JSON files generated in node backups${reset} \n\n"
+    fi
+    if [ -d $_baseFolder_/$_subscription/node_backup/$_id/file ]; then
+      addEOF $_baseFolder_/$_subscription/node_backup/$_id/file
+      createFolders $_subscription
+      `cp -r $_baseFolder_/$_subscription/node_backup/$_id/file/* $_baseFolder_/copy_from_this/file/`
+      printf "${bold}${green}${blackbackground}EOF added successfully for all the File JSON files generated in node backups${reset} \n\n"
+    fi
+    flag=true
+  else
+    printf "\n${bold}${white}${redbackground}Please check if a Node with ID $_id exists${reset}\n\n"
+    continue 2>/dev/null
+  fi
+}
+
+##################################################
+###     Block Default content Export Logic     ###
+##################################################
+function blockExport(){
+	_subscription=$2
+	_id=$1
+  (cd /var/www/$_subscription/app/profiles/${_subscription}_profile ; `drush dcer block_content $_id --folder=$_baseFolder_/$_subscription/block_backup/$_id 2>/dev/null &`)
+  if [ -d $_baseFolder_/$_subscription/block_backup/$_id ]; then
+    startScript
+    printf "${bold}${green}${blackbackground}Default Content for Block $_id backed up successfully to ${enable_underline}$_baseFolder_/$_subscription/block_backup/$_id${disable_underline}${reset} \n\n"
+    if [ -d $_baseFolder_/$_subscription/block_backup/$_id/block_content ]; then
+      addEOF $_baseFolder_/$_subscription/block_backup/$_id/block_content
+      createFolders $_subscription
+      `cp -r $_baseFolder_/$_subscription/block_backup/$_id/block_content/* $_baseFolder_/copy_from_this/block_content/`
+      printf "${bold}${green}${blackbackground}EOF added successfully for all the Block JSON files generated in block_content backups${reset} \n\n"
+    fi
+    if [ -d $_baseFolder_/$_subscription/block_backup/$_id/file ]; then
+      addEOF $_baseFolder_/$_subscription/block_backup/$_id/file
+      createFolders $_subscription
+      `cp -r $_baseFolder_/$_subscription/block_backup/$_id/file/* $_baseFolder_/copy_from_this/file/`
+      printf "${bold}${green}${blackbackground}EOF added successfully for all the File JSON files generated in block_content backups${reset} \n\n"
+    fi
+    flag=true
+  else
+    printf "\n${bold}${white}${redbackground}Please check if a Block with ID $_id exists${reset}\n\n"
+    continue 2>/dev/null
+  fi
+}
+
+##################################################
+###     Menu Default content Export Logic      ###
+##################################################
+function menuLinkExport(){
+	_subscription=$2
+	_id=$1
+  (cd /var/www/$_subscription/app/profiles/${_subscription}_profile ; `drush dcer menu_link_content $_id --folder=$_baseFolder_/$_subscription/menu_backup/$_id 2>/dev/null`)
+  if [ -d $_baseFolder_/$_subscription/menu_backup/$_id ]; then
+    startScript
+    printf "${bold}${green}${blackbackground}Default Content for Menu $_id backed up successfully to ${enable_underline}$_baseFolder_/$_subscription/menu_backup/$_id${disable_underline}${reset} \n\n"
+    if [ -d $_baseFolder_/$_subscription/menu_backup/$_id/menu_link_content ]; then
+      addEOF $_baseFolder_/$_subscription/menu_backup/$_id/menu_link_content
+      createFolders $_subscription
+      `cp -r $_baseFolder_/$_subscription/menu_backup/$_id/menu_link_content/* $_baseFolder_/copy_from_this/menu_link_content/`
+      printf "${bold}${green}${blackbackground}EOF added successfully for all the Menu JSON files generated in menu_link_content backups${reset} \n\n"
+    fi
+    flag=true
+  else
+    printf "\n${bold}${white}${redbackground}Please check if a Menu with ID $_id exists${reset}\n\n"
+    continue 2>/dev/null
+  fi
+}
+
+##################################################
+###     File Default content Export Logic      ###
+##################################################
+function fileExport(){
+	_subscription=$2
+	_id=$1
+  (cd /var/www/$_subscription/app/profiles/${_subscription}_profile ; `drush dcer file $_id --folder=$_baseFolder_/$_subscription/file_backup/$_id 2>/dev/null`)
+  if [ -d $_baseFolder_/$_subscription/file_backup/$_id ]; then
+    startScript
+    printf "${bold}${green}${blackbackground}Default Content for File $_id backed up successfully to ${enable_underline}$_baseFolder_/$_subscription/file_backup/$_id${disable_underline}${reset} \n\n"
+    if [ -d $_baseFolder_/$_subscription/file_backup/$_id/file ]; then
+      addEOF $_baseFolder_/$_subscription/file_backup/$_id/file
+      createFolders $_subscription
+      `cp -r $_baseFolder_/$_subscription/file_backup/$_id/file/* $_baseFolder_/copy_from_this/file/`
+      printf "${bold}${green}${blackbackground}EOF added successfully for all the File JSON files generated in file backups${reset} \n\n"
+    fi
+    flag=true
+  else
+    printf "\n${bold}${white}${redbackground}Please check if a File with ID $_id exists${reset}\n\n"
+    continue 2>/dev/null
+  fi
+}
+
+##################################################
+###          Content Export Logic              ###
+##################################################
+function exportLogic(){
+	_subscription=$3
+	_id=$2
+	_entityType=$1
+	_consent=$4
+
+  if [ $_entityType = "node" ]; then
+    if [ -d $_baseFolder_/$_subscription/node_backup/$_id ]; then
+			if [ $_consent = "-y" ]; then
+				nodeExport $_id $_subscription
+			else
+      	printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Node ID $_id : Do you want to overwrite it? (yes/no) :${reset} "
+      	read -n 1 confirmation
+      	if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
+        	printf "\n\n----- Overwriting Existing Backup for node with ID : $_id -----"
+        	nodeExport $_id $_subscription
+      	else
+        	printf "\n\n----- Skipping Backup for node with ID : $_id -----\n\n"
+        	continue 2>/dev/null
+      	fi
+			fi
+    else
+      nodeExport $_id $_subscription
+    fi
+    
+  elif [ $_entityType = "block_content" ]; then
+    if [ -d $_baseFolder_/$_subscription/block_backup/$_id ]; then
+			if [ ! -z $_consent ] && [ $_consent = "-y" ]; then
+				blockExport $_id $_subscription
+			else
+				printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Block ID $_id : Do you want to overwrite it? (yes/no) :${reset} "
+				read -n 1 confirmation
+				if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
+					printf "\n\n----- Overwriting Existing Backup for Block with ID : $_id -----"
+					blockExport $_id $_subscription
+				else
+					printf "\n\n----- Skipping Backup for Block with ID : $_id -----\n\n"
+					continue 2>/dev/null
+				fi
+			fi
+    else
+      blockExport $_id $_subscription
+    fi
+
+  elif [ $_entityType = "menu_link_content" ]; then
+    if [ -d $_baseFolder_/$_subscription/menu_backup/$_id ]; then
+			if [ $_consent = "-y" ]; then
+				menuLinkExport $_id $_subscription
+			else
+				printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Menu ID $_id : Do you want to overwrite it? (yes/no) :${reset} "
+				read -n 1 confirmation
+				if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
+					printf "\n\n----- Overwriting Existing Backup for Menu with ID : $_id -----"
+					menuLinkExport $_id $_subscription
+				else
+					printf "\n\n----- Skipping Backup for Menu with ID : $_id -----\n\n"
+					continue 2>/dev/null
+				fi
+			fi
+    else
+      menuLinkExport $_id $_subscription
+    fi
+
+  elif [ $_entityType = "file" ]; then
+    if [ -d $_baseFolder_/$_subscription/file_backup/$_id ]; then
+			if [ $_consent = "-y" ]; then
+				fileExport $_id $_subscription
+			else
+				printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for File ID $_id : Do you want to overwrite it? (yes/no) :${reset} "
+				read -n 1 confirmation
+				if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
+					printf "\n\n----- Overwriting Existing Backup for File with ID : $_id -----"
+					fileExport $_id $_subscription
+				else
+					printf "\n\n----- Skipping Backup for File with ID : $_id -----\n\n"
+					continue 2>/dev/null
+				fi
+			fi
+    else
+      fileExport $_id $_subscription
+    fi
+  fi
+}
+
+function copyToLocal() {
+	copyBackupIntoProfile=$1
+	if [ $copyBackupIntoProfile == 'y' ] || [ $copyBackupIntoProfile == 'Y' ] || [ $copyBackupIntoProfile == '-y' ]; then
+		if [ -d $_baseFolder_/copy_from_this/node/ ]; then
+			if [ -n "$(ls -A $_baseFolder_/copy_from_this/node 2>/dev/null)" ]; then
+			`cp -r $_baseFolder_/copy_from_this/node/* /var/www/$subscription/app/profiles/${subscription}_profile/content/node/`
+			fi
+		fi
+		if [ -d $_baseFolder_/copy_from_this/block_content/ ]; then
+			if [ -n "$(ls -A $_baseFolder_/copy_from_this/block_content 2>/dev/null)" ]; then
+				`cp -r $_baseFolder_/copy_from_this/block_content/* /var/www/$subscription/app/profiles/${subscription}_profile/content/block_content/`
+			fi
+		fi
+		if [ -d $_baseFolder_/copy_from_this/file/ ]; then
+			if [ -n "$(ls -A $_baseFolder_/copy_from_this/file 2>/dev/null)" ]; then
+				`cp -r $_baseFolder_/copy_from_this/file/* /var/www/$subscription/app/profiles/${subscription}_profile/content/file/`
+			fi
+		fi
+		if [ -d $_baseFolder_/copy_from_this/menu_link_content/ ]; then
+			if [ -n "$(ls -A $_baseFolder_/copy_from_this/menu_link_content 2>/dev/null)" ]; then
+				`cp -r $_baseFolder_/copy_from_this/menu_link_content/* /var/www/$subscription/app/profiles/${subscription}_profile/content/menu_link_content/`
+			fi
+		fi
+		`rm -r $_baseFolder_/copy_from_this`
+		printf "\n\n${bold}${green}Successs!!! Copied all your backups directly onto your local setup, you can proceed on commiting those changes on to your working git branch${reset}\n\n"
+
+	elif [ $copyBackupIntoProfile == 'n' ] || [ $copyBackupIntoProfile == 'N' ]; then
+		printf "\n\n${bold}${red}Backed up JSON's have not been copied onto your local setup, You need to manually copy paste them from ${enable_underline}${yellow}$_baseFolder_/copy_from_this${disable_underline}${reset}\n"
+	else
+		printf "\n\n${bold}${whitebackground}${red}Invalid option!!${reset}\n\n"
+		printf "\n${bold}${red}Backed up JSON's have not been copied onto your local setup, You need to manually copy paste them from ${enable_underline}${yellow}$_baseFolder_/copy_from_this${disable_underline}${reset}\n"
+	fi
+}
+
+
+##################################################
+###          Script's starting point           ###
+##################################################
+
+countIds=0
+if [ "$1" = "install" ]; then
+	cp easydcer /usr/bin/ 2>/dev/null
+	chmod +x /usr/bin/easydcer 2>/dev/null
+	if [ $? = 0 ]; then
+		printf "\n\n${bold}${yellow}Command successfully installed into /usr/bin, Now you can use this call this script from any path in the system${reset}\n\n"
+	elif [ $? = 1 ]; then
+	  printf "\n\n${bold}${yellow}Please use sudo while installing the script.${reset}\n\n"
+	fi
+elif [ "$2" = "export" ]; then
+	subscription=$1
+	#shift;
+	if [ ! -d /var/www/$subscription ]; then
+		printf "\n${bold}${red}${whitebackground}Cannot find a local setup with name ${enable_underline}$subscription${disable_underline}, Please make sure you have this project in your local${reset}\n\n"
+	else
+		if [  ! $# -ge 4 -o ! $# -le 5 ]; then
+			printf "\n${bold}${red}USAGE : ./easydrush <subscription_name> <entity_type> <id's_to_export>${reset}\n\n"
+			exit 0
+		else
+			case "$3" in
+				block) _entityType=block_content ;;
+				node) _entityType=node ;;
+				menu) _entityType=menu_link_content ;;
+				file) _entityType=file ;;
+				*) printf "\nPlease enter a valid enitity type to export.\n"; exit 0 ;;
+			esac
+			printf "\nWelcome ${bold}${green}$host${reset}\n"
+			ids=$4
+			idArray=(${ids//,/ })
+			uniqueIdArray=($(echo "${idArray[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+			start_time=$(date +%s)	
+			for id in "${uniqueIdArray[@]}"; do
+				countIds=$((countIds + 1))
+				if [ "$5" = '-y' ]; then
+					exportLogic $_entityType $id $subscription $5
+				else
+					exportLogic $_entityType $id $subscription
+				fi
+			done
+
+			if [ $flag = "true" ]; then
+				consent=$5
+				end_time=$(date +%s)
+				execution_time=$(expr $end_time - $start_time)
+				printf "\n${bold}${yellow}Total number of unique id's given as input : $countIds${reset}\n"
+				printf "\n${bold}${green}Successfully backedup the default content you need in ${enable_underline} $execution_time ${disable_underline} seconds${reset}\n"
+				printf "\n${bold}${yellow}All your individual backups can be found ${enable_underline}$_baseFolder_/$subscription${disable_underline}${reset}\n"
+				printf "\n${bold}${yellow}All of these generated JSON files have EOF${reset}\n"
+
+				if [ ! -z $consent ] && [ $consent = "-y" ]; then
+					copyToLocal $consent
+				else
+					printf "\n${bold}Do you want to copy the backed up JSON's directly into ${enable_underline}/var/www/$subscription/app/profiles/${subscription}_profile/content${disable_underline} ?(y/n)${reset} : "
+					read -n 1 copyBackupIntoProfile
+					copyToLocal $copyBackupIntoProfile
+				fi
+				end_time=$(date +%s)
+				execution_time=$(expr $end_time - $start_time)
+				printf "\n${bold}${yellow}Total Runtime : $execution_time seconds${reset}\n"
+				printf "\n${bold}${yellow}Thanks for using this script!!! Feedback is appreciated${reset}\n\n\n"
+			fi
+		fi
+	fi
+elif [ "$1" = "--help" ]; then
+	printf "\n OPTIONS AVAILABLE :\n1.) ${enable_underline}install mode${disable_underline} :\n\tThis is used to install the script into /usr/bin/ so it can be called from anywhere in the system\n"
+	printf "\tUse this only when there is any new version available for this script or if it is the first time you are using this script\n\t${bold}${green}Usage: sudo ./easydcer install${reset}\n"
+	printf "2.) ${enable_underline}export mode${disable_underline} :\n\tThis can be used when user wants to export any default content from the local setup they have\n"
+	printf "\tThis mode supports export for 4 entity types -> ${yellow}node, block, menu, file and${reset}\n"
+	printf "\t${yellow}One optional parameter [-y] when [-y] optional parameter is used all prompts are considered to have an yes as answer${reset}\n"
+	printf "\t${bold}${green}Usage: easydcer <subscription_name> export <entity_type> <id's separated by a comma> [optional-parameters]${reset}\n"
+	printf "\t${yellow}Examples:\n\t\teasydcer pfepipen export block 22,23,24,25${reset}\n"
+	printf "\t\t${yellow}easydcer pfepipen export node 22,23,24,25 -y${reset}\n"
+	printf "\t\t${yellow}easydcer pfepipen export menu 22,23,24,25${reset}\n"
+	printf "\t\t${yellow}easydcer pfepipen export file 22,23,24,25 -y${reset}\n\n"
+else 
+	printf "\n${bold}${red}Invalid mode detected!!! Please use --help argument to understand how to use this script properly${reset}\n\n"
+	exit 0
+fi
