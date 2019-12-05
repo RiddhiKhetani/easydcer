@@ -23,7 +23,7 @@ Bash Script which makes exporting Drupal default content a lot easier than manua
   
 + Once all the above steps are done, Execute the script like you would do with any other normal bash script
 
-  + `sudo ./easydcer install` - to install the script onto your system
+  + `./easydcer install` - to install the script onto your system
   + After that refer to `easydcer --help` - to understand how the script works
 
 ###### Enjoy Scripting 🙂
