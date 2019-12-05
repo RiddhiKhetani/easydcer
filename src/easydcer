@@ -78,8 +78,8 @@ function addEOF(){
 ###     Node Default content Export Logic      ###
 ##################################################
 function nodeExport(){
-	_subscription=$2
-	_id=$1
+  _subscription=$2
+  _id=$1
   (cd /var/www/$_subscription/app/profiles/${_subscription}_profile ; `drush dcer node $_id --folder=$_baseFolder_/$_subscription/node_backup/$_id 2>/dev/null &`)
   if [ -d $_baseFolder_/$_subscription/node_backup/$_id ]; then
     startScript  
@@ -140,7 +140,7 @@ function blockExport(){
 }
 
 ##################################################
-###     Menu Default content Export Logic      ###
+###      Menu Default content Export Logic     ###
 ##################################################
 function menuLinkExport(){
 	_subscription=$2
@@ -196,11 +196,11 @@ function exportLogic(){
 
   if [ $_entityType = "node" ]; then
     if [ -d $_baseFolder_/$_subscription/node_backup/$_id ]; then
-			if [ $_consent = "-y" ]; then
+			if [ ! -z $_consent ] && [ $_consent = "-yes" ]; then
 				nodeExport $_id $_subscription
 			else
       	printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Node ID $_id : Do you want to overwrite it? (yes/no) :${reset} "
-      	read -n 1 confirmation
+      	read confirmation
       	if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
         	printf "\n\n----- Overwriting Existing Backup for node with ID : $_id -----"
         	nodeExport $_id $_subscription
@@ -215,11 +215,11 @@ function exportLogic(){
     
   elif [ $_entityType = "block_content" ]; then
     if [ -d $_baseFolder_/$_subscription/block_backup/$_id ]; then
-			if [ ! -z $_consent ] && [ $_consent = "-y" ]; then
+			if [ ! -z $_consent ] && [ $_consent = "-yes" ]; then
 				blockExport $_id $_subscription
 			else
 				printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Block ID $_id : Do you want to overwrite it? (yes/no) :${reset} "
-				read -n 1 confirmation
+				read confirmation
 				if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
 					printf "\n\n----- Overwriting Existing Backup for Block with ID : $_id -----"
 					blockExport $_id $_subscription
@@ -234,11 +234,11 @@ function exportLogic(){
 
   elif [ $_entityType = "menu_link_content" ]; then
     if [ -d $_baseFolder_/$_subscription/menu_backup/$_id ]; then
-			if [ $_consent = "-y" ]; then
+			if [ ! -z $_consent ] && [ $_consent = "-yes" ]; then
 				menuLinkExport $_id $_subscription
 			else
 				printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for Menu ID $_id : Do you want to overwrite it? (yes/no) :${reset} "
-				read -n 1 confirmation
+				read confirmation
 				if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
 					printf "\n\n----- Overwriting Existing Backup for Menu with ID : $_id -----"
 					menuLinkExport $_id $_subscription
@@ -253,11 +253,11 @@ function exportLogic(){
 
   elif [ $_entityType = "file" ]; then
     if [ -d $_baseFolder_/$_subscription/file_backup/$_id ]; then
-			if [ $_consent = "-y" ]; then
+			if [ ! -z $_consent ] && [ $_consent = "-yes" ]; then
 				fileExport $_id $_subscription
 			else
 				printf "\n\n${bold}${white}${redbackground}Looks like, there is already exported content which is available for File ID $_id : Do you want to overwrite it? (yes/no) :${reset} "
-				read -n 1 confirmation
+				read confirmation
 				if [ $confirmation == "y" ] || [ $confirmation == "Y" ]; then
 					printf "\n\n----- Overwriting Existing Backup for File with ID : $_id -----"
 					fileExport $_id $_subscription
@@ -274,7 +274,7 @@ function exportLogic(){
 
 function copyToLocal() {
 	copyBackupIntoProfile=$1
-	if [ $copyBackupIntoProfile == 'y' ] || [ $copyBackupIntoProfile == 'Y' ] || [ $copyBackupIntoProfile == '-y' ]; then
+	if [ $copyBackupIntoProfile == 'y' ] || [ $copyBackupIntoProfile == 'Y' ] || [ $copyBackupIntoProfile == '-yes' ]; then
 		if [ -d $_baseFolder_/copy_from_this/node/ ]; then
 			if [ -n "$(ls -A $_baseFolder_/copy_from_this/node 2>/dev/null)" ]; then
 			`cp -r $_baseFolder_/copy_from_this/node/* /var/www/$subscription/app/profiles/${subscription}_profile/content/node/`
@@ -288,7 +288,7 @@ function copyToLocal() {
 		if [ -d $_baseFolder_/copy_from_this/file/ ]; then
 			if [ -n "$(ls -A $_baseFolder_/copy_from_this/file 2>/dev/null)" ]; then
 				`cp -r $_baseFolder_/copy_from_this/file/* /var/www/$subscription/app/profiles/${subscription}_profile/content/file/`
-			fi
+      fi
 		fi
 		if [ -d $_baseFolder_/copy_from_this/menu_link_content/ ]; then
 			if [ -n "$(ls -A $_baseFolder_/copy_from_this/menu_link_content 2>/dev/null)" ]; then
@@ -313,12 +313,12 @@ function copyToLocal() {
 
 countIds=0
 if [ "$1" = "install" ]; then
-	cp easydcer /usr/bin/ 2>/dev/null
-	chmod +x /usr/bin/easydcer 2>/dev/null
+	sudo cp easydcer /usr/bin/ 2>/dev/null
+	sudo chmod +x /usr/bin/easydcer 2>/dev/null
 	if [ $? = 0 ]; then
-		printf "\n\n${bold}${yellow}Command successfully installed into /usr/bin, Now you can use this call this script from any path in the system${reset}\n\n"
+		printf "\n\n${bold}${yellow}Command successfully installed into /usr/bin, Now you can call this script from any path in the system${reset}\n\n\n"
 	elif [ $? = 1 ]; then
-	  printf "\n\n${bold}${yellow}Please use sudo while installing the script.${reset}\n\n"
+	  printf "\n\n${bold}${yellow}Please enter your sudo password while installing the script.${reset}\n\n"
 	fi
 elif [ "$2" = "export" ]; then
 	subscription=$1
@@ -335,7 +335,7 @@ elif [ "$2" = "export" ]; then
 				node) _entityType=node ;;
 				menu) _entityType=menu_link_content ;;
 				file) _entityType=file ;;
-				*) printf "\nPlease enter a valid enitity type to export.\n"; exit 0 ;;
+				*) printf "\n\n${bold}${red}Please enter a valid enitity type to export.${reset}\n\n"; exit 0 ;;
 			esac
 			printf "\nWelcome ${bold}${green}$host${reset}\n"
 			ids=$4
@@ -344,10 +344,13 @@ elif [ "$2" = "export" ]; then
 			start_time=$(date +%s)	
 			for id in "${uniqueIdArray[@]}"; do
 				countIds=$((countIds + 1))
-				if [ "$5" = '-y' ]; then
+				if [ "$5" = '-yes' ]; then
 					exportLogic $_entityType $id $subscription $5
-				else
+				elif [ -z "$5" ]; then
 					exportLogic $_entityType $id $subscription
+				else
+				 	printf "\n\n${bold}${red}Invalid optional parameter detected${reset}\n\n"
+					exit 0
 				fi
 			done
 
@@ -360,11 +363,11 @@ elif [ "$2" = "export" ]; then
 				printf "\n${bold}${yellow}All your individual backups can be found ${enable_underline}$_baseFolder_/$subscription${disable_underline}${reset}\n"
 				printf "\n${bold}${yellow}All of these generated JSON files have EOF${reset}\n"
 
-				if [ ! -z $consent ] && [ $consent = "-y" ]; then
+				if [ ! -z $consent ] && [ $consent = "-yes" ]; then
 					copyToLocal $consent
 				else
 					printf "\n${bold}Do you want to copy the backed up JSON's directly into ${enable_underline}/var/www/$subscription/app/profiles/${subscription}_profile/content${disable_underline} ?(y/n)${reset} : "
-					read -n 1 copyBackupIntoProfile
+					read copyBackupIntoProfile
 					copyToLocal $copyBackupIntoProfile
 				fi
 				end_time=$(date +%s)
@@ -375,16 +378,16 @@ elif [ "$2" = "export" ]; then
 		fi
 	fi
 elif [ "$1" = "--help" ]; then
-	printf "\n OPTIONS AVAILABLE :\n1.) ${enable_underline}install mode${disable_underline} :\n\tThis is used to install the script into /usr/bin/ so it can be called from anywhere in the system\n"
-	printf "\tUse this only when there is any new version available for this script or if it is the first time you are using this script\n\t${bold}${green}Usage: sudo ./easydcer install${reset}\n"
+	printf "\nOPTIONS AVAILABLE :\n1.) ${enable_underline}install mode${disable_underline} :\n\tThis is used to install the script into /usr/bin/ so it can be called from anywhere in the system\n"
+	printf "\tUse this only when there is any new version available for this script or if it is the first time you are using this script\n\t${bold}${green}Usage: ./easydcer install${reset}\n"
 	printf "2.) ${enable_underline}export mode${disable_underline} :\n\tThis can be used when user wants to export any default content from the local setup they have\n"
 	printf "\tThis mode supports export for 4 entity types -> ${yellow}node, block, menu, file and${reset}\n"
-	printf "\t${yellow}One optional parameter [-y] when [-y] optional parameter is used all prompts are considered to have an yes as answer${reset}\n"
+	printf "\t${yellow}One optional parameter [-yes] when [-yes] optional parameter is used all prompts are considered to have an yes as answer${reset}\n"
 	printf "\t${bold}${green}Usage: easydcer <subscription_name> export <entity_type> <id's separated by a comma> [optional-parameters]${reset}\n"
 	printf "\t${yellow}Examples:\n\t\teasydcer pfepipen export block 22,23,24,25${reset}\n"
-	printf "\t\t${yellow}easydcer pfepipen export node 22,23,24,25 -y${reset}\n"
+	printf "\t\t${yellow}easydcer pfepipen export node 22,23,24,25 -yes${reset}\n"
 	printf "\t\t${yellow}easydcer pfepipen export menu 22,23,24,25${reset}\n"
-	printf "\t\t${yellow}easydcer pfepipen export file 22,23,24,25 -y${reset}\n\n"
+	printf "\t\t${yellow}easydcer pfepipen export file 22,23,24,25 -yes${reset}\n\n"
 else 
 	printf "\n${bold}${red}Invalid mode detected!!! Please use --help argument to understand how to use this script properly${reset}\n\n"
 	exit 0
